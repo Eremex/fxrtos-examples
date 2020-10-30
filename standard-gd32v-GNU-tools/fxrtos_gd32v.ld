@@ -23,94 +23,55 @@
  *  POSSIBILITY OF SUCH DAMAGE. 
  */
 
-  .section .reset
-  .section .vectors, "ax"
+MEMORY
+{
+	rom (rx) : ORIGIN = 0x08000000, LENGTH = 128K
+	ram (rwx) : ORIGIN = 0x20000000, LENGTH = 32K
+}
 
-  .globl vector_base
-vector_base:
-  j reset_handler
-  .align    2
+ENTRY(reset_handler)
 
-  /*.section .init*/
-  .globl reset_handler
-  .type reset_handler,@function
+SECTIONS
+{
+	.reset : {
+		*(.reset)
+		*(.vectors)
+	} >rom
+        
+    .init : {
+		*(.init)
+	} >rom
 
-reset_handler:
-  /* Jump to logical address first to ensure correct operation of RAM region  */
-  la   a0, _start
-  li   a1, 1
-  slli a1, a1, 29
-  bleu a1, a0, _start0800
-  srli a1, a1, 2
-  bleu a1, a0, _start0800
-  la   a0, _start0800
-  add  a0, a0, a1
-  jr   a0
+	.text : {
+		*(.text*)
+		. = ALIGN(4);
+		*(.rodata*)
+		*(.srodata*)
+		. = ALIGN(4);
+	} >rom
 
-_start0800:
-  /* Jump to program start */
-  la t1, _start
-  jalr t1
+	. = ALIGN(4);
+	_etext = .;
 
-  .section .init, "ax", %progbits
+	.data : {
+		_data = .;
+		*(.data*)
+		*(.sdata*)
+	} >ram AT >rom
+	_data_loadaddr = LOADADDR(.data);
 
-  .global _start
-  .type _start, function
-_start:
-  la sp, main_stack
-  addi    sp, sp, 0x200
-   
-  /* load mtvec */
-  la a0, hal_intr_entry
-  csrw mtvec, a0
+	. = ALIGN(4);
+	_edata = .;
 
-  csrc    mstatus, 8
-  /* enable M mode time interrupts */
-  li      t0, 0x80
-  csrw    mie, t0
+	.bss : {
+                _bss = .;
+		*(.bss*)
+		*(.sbss*)
+		*(COMMON)
+		. = ALIGN(4);
+		_ebss = .;
+	} >ram
 
-  /* Load data section */
-  la a0, _data_loadaddr
-  la a1, _data
-  la a2, _edata
-  bgeu a1, a2, 2f
-1:
-  lw t0, (a0)
-  sw t0, (a1)
-  addi a0, a0, 4
-  addi a1, a1, 4
-  bltu a1, a2, 1b
-2:
-
-  /* Zero bss section */
-  la a0, _bss
-  la a1, _ebss
-  bgeu a0, a1, 2f
-1:
-  sw zero, (a0)
-  addi a0, a0, 4
-  bltu a0, a1, 1b
-2:
-
-start:
-  /* Jump to application entry point */
-  li a0, 0
-  li a1, 0
-  la t1, main
-  jalr t1
-
-.global mtimer_int_enable
-.global mtimer_int_disable
-
-mtimer_int_enable:
-    csrr    a0, mie
-    or      a0, a0, 0x80
-    csrw    mie, a0
-    ret
-
-mtimer_int_disable:
-    csrr    a0, mie
-    li      a1, 0xffffff7f
-    and     a0, a0, a1
-    csrw    mie, a0
-    ret
+	. = ALIGN(4);
+	end = .;
+}

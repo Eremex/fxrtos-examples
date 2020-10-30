@@ -33,7 +33,9 @@
 #define LED_G_PIN 1
 #define LED_B_PIN 2
 
-static fx_sem_t sem;
+static fx_sem_t sem1;
+static fx_sem_t sem2;
+static fx_sem_t sem3;
 int main_stack[0x200 / sizeof(int)];
 static volatile uint32_t* const gpioa_ctl0 = (uint32_t*)0x40010800;
 static volatile uint32_t* const gpioa_out_ctl = (uint32_t*)0x4001080C;
@@ -44,6 +46,15 @@ static volatile uint32_t* const rcu_apb2en = (volatile uint32_t*)0x40021018;
 
 extern void systick_enable(void);
 extern void systick_disable(void);
+
+//
+// If HAL_CPU_INTR = RV32I_V2
+//
+void hal_pic_msip_set(unsigned int req)
+{
+    static volatile uint32_t* const msip = (volatile uint32_t*) 0xd1000ffc;
+    *msip = req;
+}
 
 static inline void mtimer_setup(void)
 {
@@ -66,81 +77,112 @@ void hal_timer_post_tick(void)
     mtimer_int_enable();
 }
 
-static void green_on()
+static void green(bool off_on)
 {
-    *rcu_apb2en |= (1 << 2); // GPIOA enable
-    *gpioa_out_ctl = ~0;
     uint32_t v = *gpioa_ctl0;
     v &= ~(0xF << LED_G_PIN*4);
     v |= (0x3 << LED_G_PIN*4);
     *gpioa_ctl0 = v;
-    *gpioa_out_ctl = ~(1 << LED_G_PIN) ; // LED_G On
+     
+    v = *gpioa_out_ctl;
+    v &= ~(1 << LED_G_PIN); // clear bit
+    v |= (~off_on << LED_G_PIN); // set value inverted
+    *gpioa_out_ctl = v;
 }
 
-static void blue_on()
+static void blue(bool off_on)
 {
-    *rcu_apb2en |= (1 << 2); // GPIOA enable
     uint32_t v = *gpioa_ctl0;
     v &= ~(0xF << LED_B_PIN*4);
     v |= (0x3 << LED_B_PIN*4);
     *gpioa_ctl0 = v;
-    *gpioa_out_ctl = ~(1 << LED_B_PIN) ; // LED_G On
+
+    v = *gpioa_out_ctl;
+    v &= ~(1 << LED_B_PIN); // clear bit
+    v |= (~off_on << LED_B_PIN); // set value inverted
+    *gpioa_out_ctl = v;
 }
 
-void red_on()
+static void red(bool off_on)
 {
-    *rcu_apb2en |= (1 << 4); // GPIOC enable
     uint32_t v = *gpioc_ctl1;
     v &= ~(0xF << 20);
     v |= (0x3 << 20);
     *gpioc_ctl1 = v;
 
-    *gpioc_out_ctl = ~(1 << LED_R_PIN) ; // LED On
+    v = *gpioc_out_ctl; // save state
+    v &= ~(1 << LED_R_PIN); // clear bit
+    v |= (~off_on << LED_R_PIN); // set value inverted
+    *gpioc_out_ctl = v;
 }
+
+//
+// Simulate fade effect with pulse width modulation.
+// dir parameter must be either 1 for "fade in" or -1 for "fade out".
+// Duration must be divisable by 10.
+//
+static void fade(void(*ctrl)(bool), const unsigned int duration, const signed int dir)
+{
+    const unsigned int T = 10;
+    const unsigned int n = duration / T;
+    unsigned int s = T * (unsigned int)(dir > 0);
+    unsigned int m = 0;
+    unsigned int i = 0;
+
+    for (i = 0; i < n; ++i)
+    {
+        const unsigned int f = (i * T) / n;
+        s += ((int)(m != f)) * -dir;
+        m = f;
+
+        ctrl(false); // off
+        fx_thread_sleep(s);
+        ctrl(true); // on
+        fx_thread_sleep(T - s);  
+    }
+}
+
 
 void thread1_fn(void* arg)
 {
     (void)arg;
-
-    uint32_t v = *gpioa_ctl0;
-    v &= ~(0xF << LED_G_PIN*4);
-    v |= (0x3 << LED_G_PIN*4);
-    *gpioa_ctl0 = v;
-    *gpioa_out_ctl = ~0;
-
+    fx_sem_post(&sem1);
     while (1)
     {
-        fx_thread_sleep(1000);
-        *gpioa_out_ctl = ~(1 << LED_G_PIN) ; // LED_G On
-        fx_thread_sleep(1000);
-        fx_sem_post(&sem);
+        
+        fx_sem_wait(&sem1, NULL);
+        fade(green, 600, 1);
+        fade(green, 600, -1);
+        green(false);
+        fx_sem_post(&sem2);
+        
     }
 }
 
 void thread2_fn(void* arg)
 {
     (void)arg;
-
-    uint32_t v = *gpioa_ctl0;
-    v &= ~(0xF << LED_B_PIN*4);
-    v |= (0x3 << LED_B_PIN*4);
-    *gpioa_ctl0 = v;
-
+    
     while (1)
     {
-        fx_sem_wait(&sem, NULL);
-        *gpioa_out_ctl = ~(1 << LED_B_PIN) ; // LED_B On
+        fx_sem_wait(&sem2, NULL);
+        fade(blue, 600, 1);
+        fade(blue, 600, -1);
+        blue(false);
+        fx_sem_post(&sem3);
     }
 }
 
 void thread3_fn(void* arg)
 {
     (void)arg;
-
     while (1)
     { 
-        red_on();
-        fx_thread_sleep(1000);
+        fx_sem_wait(&sem3, NULL);
+        fade(red, 600, 1);
+        fade(red, 600, -1);
+        red(false);
+        fx_sem_post(&sem1);
     }
 }
 
@@ -157,9 +199,16 @@ void fx_app_init(void)
 
     *rcu_apb2en |= (1 << 4); // GPIOC enable
     *rcu_apb2en |= (1 << 2); // GPIOA enable
+    green(false);
+    blue(false);
+    red(false);
+
+
     mtimer_setup();
     mtimer_int_enable();
-    fx_sem_init(&sem, 0, 1, FX_SYNC_POLICY_FIFO);
+    fx_sem_init(&sem1, 0, 1, FX_SYNC_POLICY_FIFO);
+    fx_sem_init(&sem2, 0, 1, FX_SYNC_POLICY_FIFO);
+    fx_sem_init(&sem3, 0, 1, FX_SYNC_POLICY_FIFO);
     fx_thread_init(&t1, thread1_fn, NULL, 5, t1_stk, sizeof(t1_stk), false); 
     fx_thread_init(&t2, thread2_fn, NULL, 5, t2_stk, sizeof(t2_stk), false);
     fx_thread_init(&t3, thread3_fn, NULL, 5, t3_stk, sizeof(t2_stk), false); 

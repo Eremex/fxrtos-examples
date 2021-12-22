@@ -2,7 +2,22 @@
 #include "stm32f4xx_hal.h"
 #include <stdio.h>
 #include "demo_bsp.h"
-#include <FXRTOS.h>
+
+#define B1_Pin GPIO_PIN_13
+#define B1_GPIO_Port GPIOC
+#define B1_EXTI_IRQn EXTI15_10_IRQn
+#define USART_TX_Pin GPIO_PIN_2
+#define USART_TX_GPIO_Port GPIOA
+#define USART_RX_Pin GPIO_PIN_3
+#define USART_RX_GPIO_Port GPIOA
+#define LD2_Pin GPIO_PIN_5
+#define LD2_GPIO_Port GPIOA
+#define TMS_Pin GPIO_PIN_13
+#define TMS_GPIO_Port GPIOA
+#define TCK_Pin GPIO_PIN_14
+#define TCK_GPIO_Port GPIOA
+#define SWO_Pin GPIO_PIN_3
+#define SWO_GPIO_Port GPIOB
 
 TIM_HandleTypeDef htim3;
 
@@ -33,6 +48,14 @@ timer_restart(void)
 }
 
 void
+timer_init(void)
+{
+  MX_TIM3_Init();
+  __HAL_TIM_CLEAR_FLAG(&htim3, TIM_SR_UIF);
+  HAL_TIM_Base_Start_IT(&htim3);
+}
+
+void
 demo_bsp_init(void)
 {
   HAL_Init();
@@ -41,12 +64,8 @@ demo_bsp_init(void)
 
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_TIM3_Init();
 
   NVIC_SetPriority(PendSV_IRQn, 0xFF);
-  __HAL_TIM_CLEAR_FLAG(&htim3, TIM_SR_UIF);
-  HAL_TIM_Base_Start_IT(&htim3);
-  fx_kernel_entry();
 }
 
 void

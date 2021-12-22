@@ -2,7 +2,6 @@
 #include <FXRTOS.h>
 #include <stdio.h>
 #include <string.h>
-#include "demo_bsp.h"
 
 
 fx_dpc_t dpc;
@@ -60,13 +59,9 @@ fx_app_init(void)
 void
 fx_intr_handler(void)
 {
-    switch (hal_intr_get_current_vect())
+    if (hal_intr_get_current_vect() == timer_irq)
     {
-        case timer_irq:
-            tim_handler();
-            break;
-        default:
-            break;
+    	tim_handler();
     }
 }
 
@@ -74,6 +69,7 @@ int
 main(void)
 {
     demo_bsp_init();
+    timer_init();
     //
     // Kernel start. This function must be called with interrupts disabled.
     //

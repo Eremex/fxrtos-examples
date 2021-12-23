@@ -2,7 +2,6 @@
 #include "stm32f4xx_hal.h"
 #include <stdio.h>
 #include "demo_bsp.h"
-#include <FXRTOS.h>
 
 TIM_HandleTypeDef htim3;
 
@@ -33,6 +32,14 @@ timer_restart(void)
 }
 
 void
+timer_init(void)
+{
+  MX_TIM3_Init();
+  __HAL_TIM_CLEAR_FLAG(&htim3, TIM_SR_UIF);
+  HAL_TIM_Base_Start_IT(&htim3);
+}
+
+void
 demo_bsp_init(void)
 {
   HAL_Init();
@@ -41,12 +48,8 @@ demo_bsp_init(void)
 
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_TIM3_Init();
 
   NVIC_SetPriority(PendSV_IRQn, 0xFF);
-  __HAL_TIM_CLEAR_FLAG(&htim3, TIM_SR_UIF);
-  HAL_TIM_Base_Start_IT(&htim3);
-  fx_kernel_entry();
 }
 
 void

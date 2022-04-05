@@ -1,7 +1,6 @@
-#include "demo_bsp.h"
-#include <FXRTOS.h>
 #include <stdio.h>
-#include <string.h>
+#include <FXRTOS.h>
+#include "demo_bsp.h"
 
 fx_cond_t cond_0;
 fx_cond_t cond_1;
@@ -17,13 +16,12 @@ fx_thread_t thread_3;
 bool cond_0_var = 0;
 bool cond_1_var = 0;
 
-extern void led_on(void);
-extern void led_off(void);
-
+//
 // This task is used by 2 of 4 threads. Here each thread stops on 2 condvars.
 // Task_main opens all this condvars. While loop around fx_cond_wait allows
 // pass through without starting to wait, if condition have been already 
 // completed.
+//
 void
 task_0(void* args)
 {
@@ -44,8 +42,9 @@ task_0(void* args)
     fx_thread_exit();
 }
 
-
+//
 // Here is the same idea as in task_0 but another condvar is used.
+//
 void
 task_1(void* args)
 {
@@ -66,7 +65,9 @@ task_1(void* args)
     fx_thread_exit();
 }
 
+//
 // There is thread and condvar control in task_main.
+//
 void
 task_main(void* args)
 {
@@ -99,15 +100,18 @@ task_main(void* args)
 void
 fx_app_init(void)
 {
+    //
     // Creating main thread and all stacks.
+    //
     static fx_thread_t thread_main;
     static uint32_t stack_0[0x200 / sizeof(uint32_t)];
     static uint32_t stack_1[0x200 / sizeof(uint32_t)];
     static uint32_t stack_2[0x200 / sizeof(uint32_t)];
     static uint32_t stack_3[0x200 / sizeof(uint32_t)];
     static uint32_t stack_main[0x200 / sizeof(uint32_t)];
-
+    //
     // Initializing threads, conds and mutex.
+    //
     fx_cond_init(&cond_0, FX_SYNC_POLICY_DEFAULT);
     fx_cond_init(&cond_1, FX_SYNC_POLICY_DEFAULT);
     fx_cond_init(&cond_2, FX_SYNC_POLICY_DEFAULT);
@@ -129,7 +133,13 @@ fx_intr_handler(void)
 int
 main(void)
 {
-    demo_bsp_init();
+    //
+    // Hardware modules initialization
+    //
+    core_init();
+    led_init();
+    console_init();
+    //timer_init();
     //
     // Kernel start. This function must be called with interrupts disabled.
     //

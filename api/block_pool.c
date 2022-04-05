@@ -1,20 +1,19 @@
-#include "demo_bsp.h"
-#include <FXRTOS.h>
 #include <stdio.h>
-#include <string.h>
+#include <FXRTOS.h>
+#include "demo_bsp.h"
 
 fx_block_pool_t pool;
+//
 // In this program 2 blocks of size 100 are used, but their real size is 
 // 100 + sizeof(uintptr_t), so it must be taken into account when setting the 
 // pool size.
+//
 uint32_t buf[208 / sizeof(uint32_t)];
 
-
-extern void led_on(void);
-extern void led_off(void);
-
+//
 // Task_0 allocates all free blocks from pool, so thread_1 go to wait when
 // trying to allocate more blocks.
+//
 void
 task_0(void* args)
 {
@@ -43,8 +42,10 @@ task_0(void* args)
     fx_thread_exit();
 }
 
+//
 // Thread_1 trying to allocate blocks, when there are no free blocks in pool, so
 // it goes to wait for their release.
+//
 void
 task_1(void* args)
 {
@@ -69,14 +70,18 @@ task_1(void* args)
 void
 fx_app_init(void)
 {
+    //
     // Creating threads and their stacks.
+    //
     static fx_thread_t thread_0;
     static fx_thread_t thread_1;
     static uint32_t stack_0[0x200 / sizeof(uint32_t)];
     static uint32_t stack_1[0x200 / sizeof(uint32_t)];
 
     printf("INIT %u\n\r", sizeof(buf));
+    //
     // Initializing threads and block pool.
+    //
     fx_block_pool_init(&pool, buf, sizeof(buf), 100, FX_SYNC_POLICY_FIFO);
     fx_thread_init(&thread_0, task_0, "0", 10, stack_0, sizeof(stack_0), 0);
     fx_thread_init(&thread_1, task_1, "1", 10, stack_1, sizeof(stack_1), 0);
@@ -91,7 +96,13 @@ fx_intr_handler(void)
 int
 main(void)
 {
-    demo_bsp_init();
+    //
+    // Hardware modules initialization
+    //
+    core_init();
+    led_init();
+    console_init();
+    //timer_init();
     //
     // Kernel start. This function must be called with interrupts disabled.
     //

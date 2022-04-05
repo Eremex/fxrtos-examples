@@ -1,16 +1,13 @@
-#include "demo_bsp.h"
-#include <FXRTOS.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <time.h>
+#include <FXRTOS.h>
+#include "demo_bsp.h"
 
 fx_barrier_t barrier;
 
-extern void led_on(void);
-extern void led_off(void);
-
+//
 // This task demonstrates how to determine thread which opened barrier.
+//
 void
 task(void* args)
 {
@@ -27,7 +24,9 @@ task(void* args)
 void
 fx_app_init(void)
 {
+    //
     // Creating threads and their stacks.
+    //
     static fx_thread_t thread_0;
     static fx_thread_t thread_1;
     static fx_thread_t thread_2;
@@ -36,9 +35,9 @@ fx_app_init(void)
     static uint32_t stack_1[0x200 / sizeof(uint32_t)];
     static uint32_t stack_2[0x200 / sizeof(uint32_t)];
     static uint32_t stack_3[0x200 / sizeof(uint32_t)];
-
-    srand(time(NULL));
+    //
     // Initializing threads and barrier.
+    //
     fx_barrier_init(&barrier, 4);
     fx_thread_init(&thread_0, task, "0", 10, stack_0, sizeof(stack_0), 0);
     fx_thread_init(&thread_1, task, "1", 10, stack_1, sizeof(stack_1), 0);
@@ -55,7 +54,13 @@ fx_intr_handler(void)
 int
 main(void)
 {
-    demo_bsp_init();
+    //
+    // Hardware modules initialization
+    //
+    core_init();
+    led_init();
+    console_init();
+    //timer_init();
     //
     // Kernel start. This function must be called with interrupts disabled.
     //

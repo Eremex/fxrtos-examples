@@ -1,17 +1,14 @@
-#include "demo_bsp.h"
-#include <FXRTOS.h>
 #include <stdio.h>
-#include <string.h>
+#include <FXRTOS.h>
+#include "demo_bsp.h"
 
-// Creating semaphores.
 fx_sem_t sem_on;
 fx_sem_t sem_off;
 fx_sem_t sem_counter;
 
-extern void led_on(void);
-extern void led_off(void);
-
+//
 // Function for loading cpu for some time.
+//
 void
 do_work(void (*f)(void))
 {
@@ -21,8 +18,10 @@ do_work(void (*f)(void))
     }
 }
 
+//
 // This task turns led on for some time. Two semaphores are used for 
 // synchronization with second thread.
+//
 void
 task_0(void* args)
 {
@@ -35,8 +34,10 @@ task_0(void* args)
     }
 }
 
+//
 // This task turns led off for some time. Also it uses sem_counter for counting
 // blinks. After 100 blinks thread will be blocked.
+//
 void
 task_1()
 {
@@ -56,13 +57,16 @@ task_1()
 void
 fx_app_init(void)
 {
+    //
     // Creating threads and their stacks.
+    //
     static fx_thread_t thread_0;
     static fx_thread_t thread_1;
     static uint32_t stack_0[0x400 / sizeof(uint32_t)];
     static uint32_t stack_1[0x400 / sizeof(uint32_t)];
-
+    //
     // Initializing threads and semaphores.
+    //
     fx_sem_init(&sem_on, 0, 1, FX_SYNC_POLICY_FIFO);
     fx_sem_init(&sem_off, 1, 1, FX_SYNC_POLICY_FIFO);
     fx_sem_init(&sem_counter, 99, 99, FX_SYNC_POLICY_FIFO);
@@ -79,7 +83,13 @@ fx_intr_handler(void)
 int
 main(void)
 {
-    demo_bsp_init();
+    //
+    // Hardware modules initialization
+    //
+    core_init();
+    led_init();
+    console_init();
+    //timer_init();
     //
     // Kernel start. This function must be called with interrupts disabled.
     //

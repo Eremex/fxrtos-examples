@@ -1,15 +1,13 @@
-#include "demo_bsp.h"
-#include <FXRTOS.h>
 #include <stdio.h>
-#include <string.h>
+#include <FXRTOS.h>
+#include "demo_bsp.h"
 
 fx_mutex_t mutex;
 
-extern void led_on(void);
-extern void led_off(void);
-
+//
 // This task starts first. It blocks mutex and goes into suspended mode.
 // Later it will be resumed by thread_1.
+//
 void
 task_0(void* args)
 {
@@ -23,9 +21,11 @@ task_0(void* args)
     fx_thread_exit();
 }
 
+//
 // This task tryes to acquire mutex. As it is already acquired by thread_0,
 // timedacqure returns FX_THREAD_WAIT_TIMEOUT. To release mutex it's owner
 // is obtained with get_owner function.
+//
 void
 task_1()
 {
@@ -47,13 +47,16 @@ task_1()
 void
 fx_app_init(void)
 {
+    //
     // Creating threads and their stacks.
+    //
     static fx_thread_t thread_0;
     static fx_thread_t thread_1;
     static uint32_t stack_0[0x200 / sizeof(uint32_t)];
     static uint32_t stack_1[0x200 / sizeof(uint32_t)];
-
+    //
     // Initializing threads and mutex.
+    //
     fx_mutex_init(&mutex, FX_MUTEX_CEILING_DISABLED, FX_SYNC_POLICY_DEFAULT);
     fx_thread_init(&thread_0, task_0, NULL, 10, stack_0, sizeof(stack_0), 0);
     fx_thread_init(&thread_1, task_1, NULL, 10, stack_1, sizeof(stack_1), 0);
@@ -68,7 +71,13 @@ fx_intr_handler(void)
 int
 main(void)
 {
-    demo_bsp_init();
+    //
+    // Hardware modules initialization
+    //
+    core_init();
+    led_init();
+    console_init();
+    //timer_init();
     //
     // Kernel start. This function must be called with interrupts disabled.
     //

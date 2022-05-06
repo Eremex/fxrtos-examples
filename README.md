@@ -6,7 +6,7 @@ FX-RTOS demonstation examples for different platforms
 3. Open project from appropriate directory name for your IDE, or run *build.bat* / *make* command to build the firmware in command line.
 ### Prebuilt projects
 The following are references to ready-to-run projects for most popular MCUs:
-| Arch| Manufacturer | Part No | Board | Link |
+| Architecture | Manufacturer | Part No. | Board | Link |
 |---|---|---|---|---|
 | m0 | Milandr| К1986ВЕ1 | LDM, LDM-BB | [fxrtos-milandr-k1986ve1.zip](https://github.com/Eremex/fxrtos-examples/releases/download/v0.1/fxrtos-milandr-k1986ve1.zip) |
 | m3 | Milandr | К1986ВЕ92 | LDM, LDM-BB | [fxrtos-milandr-k1986ve92.zip](https://github.com/Eremex/fxrtos-examples/releases/download/v0.1/fxrtos-milandr-k1986ve92.zip) |

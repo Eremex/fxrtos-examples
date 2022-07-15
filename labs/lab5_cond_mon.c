@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) JSC EREMEX, 2008-2020.
+ *  Copyright (C) JSC EREMEX, 2019-2022.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
  *  1. Redistributions of source code must retain the above copyright notice,
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 
 #include <FXRTOS.h>
+#include "demo_bsp.h"
 
 #define SET_ROUND_ROBIN_TIMESLICE   0
 
@@ -49,7 +50,7 @@ fx_mutex_t barrier_mtx;
 fx_cond_t go_cond;
 
 //
-// Imitation of slowdown and spontaneous preemption with 50% probability
+// Imitation of cpu load slowdown and spontaneous preemption
 //
 static void load_cpu_for_time()
 {
@@ -100,6 +101,11 @@ void thread_worker(void *arg)
     fx_thread_suspend();
 }
 
+void fx_intr_handler(void)
+{
+    ;
+}
+
 void fx_app_init(void)
 {
     static fx_thread_t t[MAX_WORKERS];
@@ -127,12 +133,20 @@ void fx_app_init(void)
     fx_sched_unlock(prev);
 }
 
-void fx_intr_handler(void)
+//!
+//! Application entry point
+//!
+int main(void)
 {
-    ;
-}
+    //
+    // Hardware modules initialization
+    //
+    core_init();
+    led_init();
+    console_init();
 
-void system_stop(void)
-{
-	;
+    //
+    // Kernel start. This function must be called with interrupts disabled
+    //
+    fx_kernel_entry();
 }

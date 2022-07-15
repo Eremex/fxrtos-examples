@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) JSC EREMEX, 2008-2020.
+ *  Copyright (C) JSC EREMEX, 2019-2022.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
  *  1. Redistributions of source code must retain the above copyright notice,
@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "demo_bsp.h"
 #include <FXRTOS.h>
 
 #define SET_ROUND_ROBIN_TIMESLICE   0
@@ -93,7 +94,10 @@ void thread_2_high_prio(void *arg)
     fx_thread_exit();
 }
 
-
+void fx_intr_handler(void)
+{
+    ;
+}
 
 void fx_app_init(void)
 {
@@ -126,17 +130,20 @@ void fx_app_init(void)
     fx_sched_unlock(prev);
 }
 
-void fx_intr_handler(void)
+//!
+//! Application entry point
+//!
+int main(void)
 {
-    ;
-}
+    //
+    // Hardware modules initialization
+    //
+    core_init();
+    led_init();
+    console_init();
 
-//
-// Exception handler just stop the system.
-//
-void system_stop(void)
-{
-    while(1)
-        ;
+    //
+    // Kernel start. This function must be called with interrupts disabled
+    //
+    fx_kernel_entry();
 }
-

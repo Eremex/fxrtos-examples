@@ -40,13 +40,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "demo_bsp.h"
 #include <FXRTOS.h>
+#include "demo_bsp.h"
 
-#define SET_ROUND_ROBIN_TIMESLICE   1
-
-extern void led_on();
-extern void led_off();
+#define SET_ROUND_ROBIN_TIMESLICE   0
 
 #define MSG_SIZE	64
 char msg_buf[MSG_SIZE];

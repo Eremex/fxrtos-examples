@@ -37,9 +37,6 @@
 
 #define SET_ROUND_ROBIN_TIMESLICE   0
 
-extern void led_on(void);
-extern void led_off(void);
-
 #define MAX_WORKERS	3
 unsigned sum[MAX_WORKERS];
 //

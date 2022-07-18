@@ -34,13 +34,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "demo_bsp.h"
 #include <FXRTOS.h>
+#include "demo_bsp.h"
 
 #define SET_ROUND_ROBIN_TIMESLICE   0
-
-extern void led_on();
-extern void led_off();
 
 fx_mutex_t mutex;
 

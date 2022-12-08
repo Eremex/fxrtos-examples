@@ -66,9 +66,9 @@ void thread_0_low_prio(void *arg)
 
 void thread_1_medium_prio(void *arg)
 {
+    fx_thread_sleep(100);
     printf("T1 (medium priority) started\r\n");
 
-    fx_thread_sleep(100);
     load_cpu_for_time(led_off);
 
     fx_thread_exit();
@@ -76,9 +76,8 @@ void thread_1_medium_prio(void *arg)
 
 void thread_2_high_prio(void *arg)
 {
-    printf("T2 (high priority) started\r\n");
-
     fx_thread_sleep(200);
+    printf("T2 (high priority) started\r\n");
 
     fx_mutex_timedacquire(&mutex, FX_THREAD_INFINITE_TIMEOUT);
 

@@ -85,9 +85,8 @@ void consume(char* buf)
 //
 void thread_0_fn(void *arg)
 {
-    printf("Thread 0 started\r\n");
-
-    unsigned long counter = 0;
+    printf("Thread producer started\r\n");
+	
     while (1)
     {
 	// TODO add syncronization

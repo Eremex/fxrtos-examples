@@ -17,5 +17,6 @@ The following are references to ready-to-run projects for most popular MCUs:
 | m4f | STM | STM32F302 | Nucleo-64 | [fxrtos-st-stm32f302.zip](https://github.com/Eremex/fxrtos-examples/releases/download/v0.1/fxrtos-st-stm32f302.zip) |
 | m7f | STM | STM32F746  | Nucleo-144 | [fxrtos-st-stm32f746.zip](https://github.com/Eremex/fxrtos-examples/releases/download/v0.1/fxrtos-st-stm32f746.zip) |
 | rv32imc | Milandr | К1986ВК025 (Счётчик-М) | DemoBoard | [fxrtos-milandr-k1986vk025.zip](https://github.com/Eremex/fxrtos-examples/releases/download/v0.1/fxrtos-milandr-k1986vk025.zip) |
+| rv32imac | Gigadevice | GD32VF103 | Longan Nano | [fxrtos-gigadevice-gd32vf103.zip](https://github.com/Eremex/fxrtos-examples/releases/download/v0.1/fxrtos-gigadevice-gd32vf103.zip) |
 
 Prebuilt FX-RTOS static libraries are available at releases page: https://github.com/Eremex/fxrtos-lite/releases/
